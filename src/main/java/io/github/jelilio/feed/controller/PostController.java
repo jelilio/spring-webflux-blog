@@ -49,7 +49,7 @@ public class PostController {
 
   @DeleteMapping("{id}")
   @ResponseStatus(value = NO_CONTENT)
-  public Mono<Void> deleteEmployee(@PathVariable("id") Long id) {
+  public Mono<Void> delete(@PathVariable("id") Long id) {
     return postService.delete(id);
   }
 }
