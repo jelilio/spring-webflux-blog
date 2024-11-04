@@ -47,6 +47,11 @@ public class PostController {
     return postService.update(id, dto);
   }
 
+  @DeleteMapping
+  public Mono<Void> deleteAll(){
+    return postService.deleteAll();
+  }
+
   @DeleteMapping("{id}")
   @ResponseStatus(value = NO_CONTENT)
   public Mono<Void> delete(@PathVariable("id") Long id) {
