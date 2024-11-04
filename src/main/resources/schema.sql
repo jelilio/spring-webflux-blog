@@ -6,5 +6,6 @@ create table if not exists posts
     last_modified_by    varchar(255)                not null,
     created_date        timestamp(6) with time zone not null,
     last_modified_date  timestamp(6) with time zone not null,
+    deleted_date        timestamp(6) with time zone,
     primary key (id)
 );
