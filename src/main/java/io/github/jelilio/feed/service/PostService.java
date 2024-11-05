@@ -2,6 +2,7 @@ package io.github.jelilio.feed.service;
 
 import io.github.jelilio.feed.dto.PostDto;
 import io.github.jelilio.feed.entity.Post;
+import io.github.jelilio.feed.entity.projection.PostWithDeleteStamp;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -20,7 +21,7 @@ public interface PostService {
 
   Mono<Void> deleteAll();
 
-  Flux<Post> findAllDeleted();
+  Flux<PostWithDeleteStamp> findAllDeleted();
 
-  Flux<Post> findAllEntries();
+  Flux<PostWithDeleteStamp> findAllEntries();
 }

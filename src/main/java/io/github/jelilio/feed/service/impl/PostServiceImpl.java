@@ -2,6 +2,7 @@ package io.github.jelilio.feed.service.impl;
 
 import io.github.jelilio.feed.dto.PostDto;
 import io.github.jelilio.feed.entity.Post;
+import io.github.jelilio.feed.entity.projection.PostWithDeleteStamp;
 import io.github.jelilio.feed.exception.NotFoundException;
 import io.github.jelilio.feed.repository.PostRepository;
 import io.github.jelilio.feed.service.PostService;
@@ -62,12 +63,12 @@ public class PostServiceImpl implements PostService {
   }
 
   @Override
-  public Flux<Post> findAllDeleted() {
+  public Flux<PostWithDeleteStamp> findAllDeleted() {
     return postRepository.findByDeletedDateIsNotNull();
   }
 
   @Override
-  public Flux<Post> findAllEntries() {
+  public Flux<PostWithDeleteStamp> findAllEntries() {
     return postRepository.findAllEntries();
   }
 }

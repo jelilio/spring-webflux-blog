@@ -1,6 +1,7 @@
 package io.github.jelilio.feed.controller.admin;
 
 import io.github.jelilio.feed.entity.Post;
+import io.github.jelilio.feed.entity.projection.PostWithDeleteStamp;
 import io.github.jelilio.feed.service.PostService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,12 +18,12 @@ public class PostController {
   }
 
   @GetMapping()
-  public Flux<Post> getAll(){
+  public Flux<PostWithDeleteStamp> getAll(){
     return postService.findAllEntries();
   }
 
   @GetMapping(params = "deleted")
-  public Flux<Post> getAllDeleted(){
+  public Flux<PostWithDeleteStamp> getAllDeleted(){
     return postService.findAllDeleted();
   }
 }

@@ -1,6 +1,7 @@
 package io.github.jelilio.feed.repository;
 
 import io.github.jelilio.feed.entity.Post;
+import io.github.jelilio.feed.entity.projection.PostWithDeleteStamp;
 import io.github.jelilio.feed.repository.custom.SoftDeleteRepository;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
@@ -10,8 +11,8 @@ import reactor.core.publisher.Flux;
 
 @Repository
 public interface PostRepository extends ReactiveCrudRepository<Post, Long>, SoftDeleteRepository<Post, Long> {
-  Flux<Post> findByDeletedDateIsNotNull();
+  Flux<PostWithDeleteStamp> findByDeletedDateIsNotNull();
 
   @Query("select *FROM posts")
-  Flux<Post> findAllEntries();
+  Flux<PostWithDeleteStamp> findAllEntries();
 }
