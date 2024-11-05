@@ -49,4 +49,14 @@ public class PostServiceImpl implements PostService {
   public Mono<Void> deleteAll() {
     return postRepository.deleteAll();
   }
+
+  @Override
+  public Flux<Post> findAllDeleted() {
+    return postRepository.findByDeletedDateIsNotNull();
+  }
+
+  @Override
+  public Flux<Post> findAllEntries() {
+    return postRepository.findAllEntries();
+  }
 }

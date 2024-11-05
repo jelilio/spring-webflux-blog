@@ -17,4 +17,8 @@ public interface PostService {
   Mono<Void> delete(Long id);
 
   Mono<Void> deleteAll();
+
+  Flux<Post> findAllDeleted();
+
+  Flux<Post> findAllEntries();
 }

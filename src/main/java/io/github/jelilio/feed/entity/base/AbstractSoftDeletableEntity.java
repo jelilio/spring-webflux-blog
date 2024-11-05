@@ -6,9 +6,7 @@ import org.springframework.data.relational.core.mapping.Column;
 import java.time.Instant;
 
 public abstract class AbstractSoftDeletableEntity extends AbstractAuditingEntity {
-  private static final String COLUMN_NAME = "deleted_date";
-
   @JsonIgnore
-  @Column(COLUMN_NAME)
+  @Column("deleted_date")
   public Instant deletedDate;
 }
