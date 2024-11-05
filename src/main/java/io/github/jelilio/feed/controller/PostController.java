@@ -10,6 +10,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
+import java.util.Locale;
 
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
@@ -29,8 +30,8 @@ public class PostController {
   }
 
   @GetMapping("/{id}")
-  public Mono<Post> get(@PathVariable("id") Long id) {
-    return postService.findById(id);
+  public Mono<Post> get(@PathVariable("id") Long id, Locale locale) {
+    return postService.findById(id, locale);
   }
 
   @PostMapping
@@ -43,13 +44,18 @@ public class PostController {
   }
 
   @PutMapping("/{id}")
-  public Mono<Post> update(@PathVariable("id") Long id, @RequestBody @Valid PostDto dto){
-    return postService.update(id, dto);
+  public Mono<Post> update(@PathVariable("id") Long id, @RequestBody @Valid PostDto dto, Locale locale) {
+    return postService.update(id, dto, locale);
+  }
+
+  @DeleteMapping
+  public Mono<Void> deleteAll(){
+    return postService.deleteAll();
   }
 
   @DeleteMapping("{id}")
   @ResponseStatus(value = NO_CONTENT)
-  public Mono<Void> deleteEmployee(@PathVariable("id") Long id) {
+  public Mono<Void> delete(@PathVariable("id") Long id) {
     return postService.delete(id);
   }
 }

@@ -1,6 +1,6 @@
 package io.github.jelilio.feed.entity;
 
-import io.github.jelilio.feed.entity.base.AbstractAuditingEntity;
+import io.github.jelilio.feed.entity.base.AbstractSoftDeletableEntity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -8,17 +8,21 @@ import org.springframework.data.relational.core.mapping.Table;
 import java.util.Objects;
 
 @Table("posts")
-public class Post extends AbstractAuditingEntity {
+public class Post extends AbstractSoftDeletableEntity {
   @Id
   private Long id;
 
-  @Column("message")
-  public String message;
+  @Column("title")
+  public String title;
+
+  @Column("body")
+  public String body;
 
   public Post() {}
 
-  public Post( String message) {
-    this.message = message;
+  public Post(String title, String body) {
+    this.title = title;
+    this.body = body;
   }
 
   public Long getId() {

@@ -15,7 +15,7 @@ public class PostRepositoryTest {
 
   @Test
   public void canFindPostById() {
-    Post post = new Post("This is a test message");
+    Post post = new Post("This is a title", "This is a test body");
 
     Post created = postRepository.save(post).block();
 
@@ -24,7 +24,8 @@ public class PostRepositoryTest {
         .thenConsumeWhile((result) -> {
           assertNotNull(result);
           assertNotNull(result.getId());
-          assertEquals(post.message, result.message, "message is NOT equal");
+          assertEquals(post.title, result.title, "title is NOT equal");
+          assertEquals(post.body, result.body, "body is NOT equal");
           return true;
         })
         .verifyComplete();
@@ -32,13 +33,14 @@ public class PostRepositoryTest {
 
   @Test
   public void canSavePostEntity() {
-    Post post = new Post("This is a test message");
+    Post post = new Post("This is a title", "This is a test body");
 
     StepVerifier.create(postRepository.save(post))
         .thenConsumeWhile((result) -> {
           assertNotNull(result);
           assertNotNull(result.getId());
-          assertEquals(post.message, result.message, "message is NOT the equal");
+          assertEquals(post.title, result.title, "title is NOT equal");
+          assertEquals(post.body, result.body, "body is NOT equal");
           return true;
         })
         .verifyComplete();
