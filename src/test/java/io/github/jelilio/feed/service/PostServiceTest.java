@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.MessageSource;
 import org.springframework.test.annotation.DirtiesContext;
@@ -17,21 +18,24 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataR2dbcTest
-@DirtiesContext
+@SpringBootTest
 public class PostServiceTest {
   @Autowired
   private PostRepository postRepository;
+
+  @Autowired
+  private MessageSource messageSource;
 
   private PostService postService;
 
   @BeforeEach
   public void setUp() {
-    postService = new PostServiceImpl(postRepository);
+    postService = new PostServiceImpl(messageSource, postRepository);
 
     Flux<Post> deleteAndInsert = postService.deleteAll()
         .thenMany(postRepository.saveAll(
@@ -72,7 +76,7 @@ public class PostServiceTest {
     PostDto postDto = new PostDto("this is a title","this is a demo body");
 
     Mono<Post> createAndUpdate = postService.create(postDto)
-        .flatMap(it -> postService.findById(it.getId()));
+        .flatMap(it -> postService.findById(it.getId(), Locale.getDefault()));
 
     StepVerifier.create(createAndUpdate)
         .thenConsumeWhile((result) -> {
@@ -91,7 +95,7 @@ public class PostServiceTest {
     PostDto updatedDto = new PostDto("this is the updated title", "this is a updated demo body");
 
     Mono<Post> createAndUpdate = postService.create(postDto)
-        .flatMap(it -> postService.update(it.getId(), updatedDto));
+        .flatMap(it -> postService.update(it.getId(), updatedDto, Locale.getDefault()));
 
     StepVerifier.create(createAndUpdate)
         .thenConsumeWhile((result) -> {

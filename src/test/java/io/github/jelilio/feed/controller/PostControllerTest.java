@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.MessageSource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -26,13 +27,16 @@ public class PostControllerTest {
   WebTestClient webTestClient;
 
   @Autowired
+  MessageSource messageSource;
+
+  @Autowired
   PostRepository postRepository;
 
   PostService postService;
 
   @BeforeEach
   public void setUp() {
-    postService = new PostServiceImpl(postRepository);
+    postService = new PostServiceImpl(messageSource, postRepository);
   }
 
   @AfterEach
