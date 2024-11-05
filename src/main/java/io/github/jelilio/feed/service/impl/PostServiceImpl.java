@@ -23,14 +23,15 @@ public class PostServiceImpl implements PostService {
 
   @Override
   public Mono<Post> create(PostDto dto) {
-    var post = new Post(dto.message());
+    var post = new Post(dto.title(), dto.body());
     return postRepository.save(post);
   }
 
   @Override
   public Mono<Post> update(Long id, PostDto dto) {
     return findById(id).flatMap(savedPost -> {
-      savedPost.message = dto.message();
+      savedPost.title = dto.title();
+      savedPost.body = dto.body();
       return postRepository.save(savedPost);
     });
   }

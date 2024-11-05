@@ -36,9 +36,9 @@ public class PostServiceTest {
     Flux<Post> deleteAndInsert = postService.deleteAll()
         .thenMany(postRepository.saveAll(
             Flux.just(
-                new Post("This is a demo message-1"),
-                new Post("This is a demo message-2"),
-                new Post("This is a demo message-3")
+                new Post("This is title-1", "This is a demo body-1"),
+                new Post("This is title-2", "This is a demo body-2"),
+                new Post("This is title-3", "This is a demo body-3")
             )));
 
     StepVerifier.create(deleteAndInsert)
@@ -54,13 +54,14 @@ public class PostServiceTest {
 
   @Test
   public void canCreatePost() {
-    var postDto = new PostDto("this is a demo message");
+    PostDto postDto = new PostDto("this is a title","this is a demo body");
 
     StepVerifier.create(postService.create(postDto))
         .thenConsumeWhile((result) -> {
           assertNotNull(result);
           assertNotNull(result.getId());
-          assertEquals(postDto.message(), result.message, "message is NOT equal");
+          assertEquals(postDto.title(), result.title, "title is NOT equal");
+          assertEquals(postDto.body(), result.body, "body is NOT equal");
           return true;
         })
         .verifyComplete();
@@ -68,7 +69,7 @@ public class PostServiceTest {
 
   @Test
   public void canCreateThenFindPost() {
-    var postDto = new PostDto("this is a demo message");
+    PostDto postDto = new PostDto("this is a title","this is a demo body");
 
     Mono<Post> createAndUpdate = postService.create(postDto)
         .flatMap(it -> postService.findById(it.getId()));
@@ -77,7 +78,8 @@ public class PostServiceTest {
         .thenConsumeWhile((result) -> {
           assertNotNull(result);
           assertNotNull(result.getId());
-          assertEquals(postDto.message(), result.message, "message is NOT equal");
+          assertEquals(postDto.title(), result.title, "title is NOT equal");
+          assertEquals(postDto.body(), result.body, "body is NOT equal");
           return true;
         })
         .verifyComplete();
@@ -85,8 +87,8 @@ public class PostServiceTest {
 
   @Test
   public void canCreateThenUpdatePost() {
-    var postDto = new PostDto("this is a demo message");
-    var updatedDto = new PostDto("this is a demo updated message");
+    PostDto postDto = new PostDto("this is a title","this is a demo body");
+    PostDto updatedDto = new PostDto("this is the updated title", "this is a updated demo body");
 
     Mono<Post> createAndUpdate = postService.create(postDto)
         .flatMap(it -> postService.update(it.getId(), updatedDto));
@@ -95,7 +97,8 @@ public class PostServiceTest {
         .thenConsumeWhile((result) -> {
           assertNotNull(result);
           assertNotNull(result.getId());
-          assertEquals(updatedDto.message(), result.message, "message is NOT equal");
+          assertEquals(updatedDto.title(), result.title, "title is NOT equal");
+          assertEquals(updatedDto.body(), result.body, "body is NOT equal");
           return true;
         })
         .verifyComplete();

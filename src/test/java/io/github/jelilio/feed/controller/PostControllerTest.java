@@ -43,18 +43,19 @@ public class PostControllerTest {
 
   @Test
   public void testCreatePost() {
-    PostDto post = new PostDto("this is a demo message");
+    PostDto dto = new PostDto("this is a title","this is a demo body");
 
     webTestClient
         .post().uri("/posts")
         .contentType(APPLICATION_JSON)
         .accept(APPLICATION_JSON)
-        .body(Mono.just(post), PostDto.class)
+        .body(Mono.just(dto), PostDto.class)
         .exchange()
         .expectStatus().isCreated()
         .expectBody()
         .jsonPath("$.id").isNotEmpty()
-        .jsonPath("$.message").isEqualTo(post.message());
+        .jsonPath("$.title").isEqualTo(dto.title())
+        .jsonPath("$.body").isEqualTo(dto.body());
   }
 
   @Test
@@ -69,7 +70,7 @@ public class PostControllerTest {
 
   @Test
   public void testFindPostsById() {
-    PostDto dto = new PostDto("this is a demo message");
+    PostDto dto = new PostDto("this is a title","this is a demo body");
 
     Post created = postService.create(dto).block();
 
@@ -81,13 +82,14 @@ public class PostControllerTest {
         .expectStatus().isOk()
         .expectBody()
         .jsonPath("$.id").isEqualTo(created.getId())
-        .jsonPath("$.message").isEqualTo(dto.message());
+        .jsonPath("$.title").isEqualTo(dto.title())
+        .jsonPath("$.body").isEqualTo(dto.body());
   }
 
   @Test
   public void testUpdatePosts() {
-    PostDto dto = new PostDto("this is a demo message");
-    PostDto updatedDto = new PostDto("this is a updated demo message");
+    PostDto dto = new PostDto("this is a title","this is a demo body");
+    PostDto updatedDto = new PostDto("this is the updated title", "this is a updated demo body");
 
     Post created = postService.create(dto).block();
 
@@ -102,12 +104,13 @@ public class PostControllerTest {
         .expectStatus().isOk()
         .expectBody()
         .jsonPath("$.id").isEqualTo(created.getId())
-        .jsonPath("$.message").isEqualTo(updatedDto.message());
+        .jsonPath("$.title").isEqualTo(updatedDto.title())
+        .jsonPath("$.body").isEqualTo(updatedDto.body());
   }
 
   @Test
   public void testDeletePostById() {
-    PostDto dto = new PostDto("this is a demo message");
+    PostDto dto = new PostDto("this is a title","this is a demo body");
 
     Post created = postService.create(dto).block();
 

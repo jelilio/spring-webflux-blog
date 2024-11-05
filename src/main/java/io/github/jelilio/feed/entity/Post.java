@@ -12,13 +12,17 @@ public class Post extends AbstractAuditingEntity {
   @Id
   private Long id;
 
-  @Column("message")
-  public String message;
+  @Column("title")
+  public String title;
+
+  @Column("body")
+  public String body;
 
   public Post() {}
 
-  public Post( String message) {
-    this.message = message;
+  public Post(String title, String body) {
+    this.title = title;
+    this.body = body;
   }
 
   public Long getId() {
