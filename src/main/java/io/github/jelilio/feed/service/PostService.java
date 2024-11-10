@@ -24,4 +24,6 @@ public interface PostService {
   Flux<PostWithDeleteStamp> findAllDeleted();
 
   Flux<PostWithDeleteStamp> findAllEntries();
+
+  Mono<Void> flush();
 }

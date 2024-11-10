@@ -71,4 +71,9 @@ public class PostServiceImpl implements PostService {
   public Flux<PostWithDeleteStamp> findAllEntries() {
     return postRepository.findAllEntries();
   }
+
+  @Override
+  public Mono<Void> flush() {
+    return postRepository.flush();
+  }
 }
