@@ -6,16 +6,13 @@ import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.convert.R2dbcConverter;
 import org.springframework.data.r2dbc.core.R2dbcEntityOperations;
-import org.springframework.data.r2dbc.repository.support.SimpleR2dbcRepository;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.data.relational.core.query.Update;
-import org.springframework.data.relational.repository.query.RelationalEntityInformation;
-import org.springframework.data.repository.NoRepositoryBean;
-import org.springframework.data.util.Lazy;
 import org.springframework.data.util.Streamable;
 import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
@@ -26,75 +23,59 @@ import java.util.List;
 
 import static org.springframework.data.relational.core.query.Criteria.where;
 
-@NoRepositoryBean
-public class SoftDeleteRepositoryImpl<T extends AbstractSoftDeletableEntity, ID> extends SimpleR2dbcRepository<T, ID> implements SoftDeleteRepository<T, ID> {
+public class SoftDeleteRepositoryImpl<T extends AbstractSoftDeletableEntity, ID> implements SoftDeleteRepository<T, ID> {
   private final R2dbcEntityOperations entityOperations;
-  private final RelationalEntityInformation<T, ID> entity;
-  private final Lazy<RelationalPersistentProperty> idProperty;
-  private final Lazy<RelationalPersistentProperty> deleteFieldProperty;
+  private final R2dbcConverter converter;
 
-  public SoftDeleteRepositoryImpl(RelationalEntityInformation<T, ID> entity, R2dbcEntityOperations entityOperations, R2dbcConverter converter) {
-    super(entity, entityOperations, converter);
+  public SoftDeleteRepositoryImpl(R2dbcEntityOperations entityOperations, R2dbcConverter converter) {
     this.entityOperations = entityOperations;
-    this.entity = entity;
-    this.idProperty = Lazy.of(() -> converter
-        .getMappingContext()
-        .getRequiredPersistentEntity(this.entity.getJavaType()) //
-        .getRequiredIdProperty());
-    this.deleteFieldProperty = Lazy.of(() -> converter
-        .getMappingContext()
-        .getRequiredPersistentEntity(this.entity.getJavaType()) //
-        .getRequiredPersistentProperty("deletedDate"));
+    this.converter = converter;
   }
 
   @NonNull
   @Override
-  public Mono<Long> count() {
-    return this.entityOperations.count(Query.query(where(getDeletedFieldProperty().getName()).isNull()),
-        this.entity.getJavaType());
+  public Mono<Long> count(Class<T> entityClass) {
+    return this.entityOperations.count(Query.query(where(getDeletedFieldProperty().getName()).isNull()), entityClass);
   }
 
   @NonNull
   @Override
-  public Mono<Boolean> existsById(@NonNull ID id) {
+  public Mono<Boolean> existsById(@NonNull ID id, Class<T> entityClass) {
 
     Assert.notNull(id, "Id must not be null");
 
-    var criteria = Criteria.where(getIdProperty().getName()).is(id)
+    var criteria = Criteria.where(getIdProperty(entityClass).getName()).is(id)
         .and(getDeletedFieldProperty().getName()).isNull();
 
-    return this.entityOperations.exists(Query.query(criteria), this.entity.getJavaType());
+    return this.entityOperations.exists(Query.query(criteria), entityClass);
   }
 
   @NonNull
   @Override
-  public Mono<T> findById(@NonNull ID id) {
-    var criteria = Criteria.where(getIdProperty().getName()).is(id)
+  public Mono<T> findById(@NonNull ID id, Class<T> entityClass) {
+    var criteria = Criteria.where(getIdProperty(entityClass).getName()).is(id)
         .and(getDeletedFieldProperty().getName()).isNull();
 
-    return this.entityOperations.selectOne(Query.query(criteria),
-        this.entity.getJavaType());
+    return this.entityOperations.selectOne(Query.query(criteria), entityClass);
   }
 
   @NonNull
   @Override
-  public Flux<T> findAll() {
-    return this.entityOperations.select(Query
-            .query(where(getDeletedFieldProperty().getName()).isNull()),
-        this.entity.getJavaType());
+  public Flux<T> findAll(Class<T> entityClass) {
+    return this.entityOperations.select(Query.query(where(getDeletedFieldProperty().getName()).isNull()), entityClass);
   }
 
   @NonNull
   @Override
-  public Flux<T> findAllById(@NonNull Iterable<ID> iterable) {
+  public Flux<T> findAllById(@NonNull Iterable<ID> iterable, Class<T> entityClass) {
     Assert.notNull(iterable, "The iterable of Id's must not be null");
 
-    return findAllById(Flux.fromIterable(iterable));
+    return findAllById(Flux.fromIterable(iterable), entityClass);
   }
 
   @NonNull
   @Override
-  public Flux<T> findAllById(@NonNull  Publisher<ID> idPublisher) {
+  public Flux<T> findAllById(@NonNull Publisher<ID> idPublisher, Class<T> entityClass) {
     Assert.notNull(idPublisher, "The Id Publisher must not be null");
 
     return Flux.from(idPublisher).buffer().filter(ids -> !ids.isEmpty()).concatMap(ids -> {
@@ -103,96 +84,72 @@ public class SoftDeleteRepositoryImpl<T extends AbstractSoftDeletableEntity, ID>
         return Flux.empty();
       }
 
-      String idProperty = getIdProperty().getName();
+      String idProperty = getIdProperty(entityClass).getName();
 
       var criteria = Criteria.where(idProperty).in(ids)
           .and(getDeletedFieldProperty().getName()).isNull();
 
-      return this.entityOperations.select(Query.query(criteria), this.entity.getJavaType());
+      return this.entityOperations.select(Query.query(criteria), entityClass);
     });
   }
 
   @NonNull
   @Override
-  public Flux<T> findAll(@NonNull Sort sort) {
+  public Flux<T> findAll(@NonNull Sort sort, Class<T> entityClass) {
     Assert.notNull(sort, "Sort must not be null");
 
     var query = Query.query(where(getDeletedFieldProperty().getName()).isNull());
 
-    return this.entityOperations.select(query.sort(sort), this.entity.getJavaType());
+    return this.entityOperations.select(query.sort(sort), entityClass);
   }
 
   @NonNull
   @Override
   @Transactional
-  public Mono<Void> deleteById(@NonNull Publisher<ID> idPublisher) {
-    Assert.notNull(idPublisher, "The Id Publisher must not be null");
-
-    return Flux.from(idPublisher).buffer().filter(ids -> !ids.isEmpty()).concatMap(ids -> {
-
-      if (ids.isEmpty()) {
-        return Flux.empty();
-      }
-
-      String idProperty = getIdProperty().getName();
-
-      var query = Query.query(Criteria.where(idProperty).in(ids));
-      var update = Update.update(getDeletedFieldProperty().getName(), Instant.now());
-
-      return this.entityOperations.update(query, update, this.entity.getJavaType());
-    }).then();
-  }
-
-  @NonNull
-  @Override
-  @Transactional
-  public Mono<Void> delete(@NonNull T objectToDelete) {
-    Assert.notNull(objectToDelete, "Object to delete must not be null");
-
-    return deleteById(this.entity.getRequiredId(objectToDelete));
-  }
-
-  @NonNull
-  @Override
-  @Transactional
-  public Mono<Void> deleteAll() {
+  public Mono<Void> softDeleteAll(Class<T> entityClass) {
     return this.entityOperations.update(Query.empty(),
         Update.update(getDeletedFieldProperty().getName(), Instant.now()),
-        this.entity.getJavaType()
+        entityClass
     ).then();
   }
 
   @NonNull
   @Override
-  public Mono<Void> deleteAllById(@NonNull Iterable<? extends ID> ids) {
+  @Transactional
+  public Mono<Void> softDeleteAllById(@NonNull Iterable<? extends ID> ids, Class<T> entityClass) {
     Assert.notNull(ids, "The iterable of Id's must not be null");
 
     List<? extends ID> idsList = Streamable.of(ids).toList();
-    String idProperty = getIdProperty().getName();
 
-    var query = Query.query(Criteria.where(idProperty).in(idsList));
+    var query = Query.query(where(getIdProperty(entityClass).getName()).in(idsList));
     var update = Update.update(getDeletedFieldProperty().getName(), Instant.now());
 
-    return this.entityOperations.update(query, update, this.entity.getJavaType()).then();
+    return this.entityOperations.update(query, update, entityClass).then();
   }
 
   @NonNull
   @Override
   @Transactional
-  public Mono<Void> deleteById(@NonNull ID id) {
+  public Mono<Void> softDeleteById(@NonNull ID id, Class<T> entityClass) {
     Assert.notNull(id, "id must not be null");
 
-    var query = Query.query(Criteria.where(getIdProperty().getName()).is(id));
+    var query = Query.query(where(getIdProperty(entityClass).getName()).is(id));
     var update = Update.update(getDeletedFieldProperty().getName(), Instant.now());
 
-    return this.entityOperations.update(query, update, this.entity.getJavaType()).then();
+    return this.entityOperations.update(query, update, entityClass).then();
   }
 
   private RelationalPersistentProperty getDeletedFieldProperty() {
-    return this.deleteFieldProperty.get();
+    return this.converter
+        .getMappingContext()
+        .getRequiredPersistentEntity(AbstractSoftDeletableEntity.class)
+        .getRequiredPersistentProperty("deletedDate");
   }
 
-  private RelationalPersistentProperty getIdProperty() {
-    return this.idProperty.get();
+  private RelationalPersistentProperty getIdProperty(Class<T> entityClass) {
+    return this.converter
+        .getMappingContext()
+        .getRequiredPersistentEntity(entityClass) //
+        .getRequiredIdProperty();
   }
 }
